@@ -108,7 +108,7 @@ const userCtrl = {
     }
   },
   //user/forgot
-  forgotPassword: async (req, res) => {
+  forgotPassword: async (req, res) => { 
     try {
       const { email } = req.body;
       const user = await User.findOne({ email });
@@ -119,18 +119,19 @@ const userCtrl = {
       const url = `${CLIENT_URL}/user/reset/${access_token}`;
 
       sendMail(email, url, "Reset your password");
-      res.json({ message: "Re-send the password, please check your email." });
+      res.json({ message: `Re-send the password, please check your email ${access_token}` });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user/reset
   resetPassword: async (req, res) => {
     try {
       const { password } = req.body;
       console.log(password);
       const passwordHash = await bcrypt.hash(password, 12);
 
-      await Users.findOneAndUpdate(
+      await User.findOneAndUpdate(
         { _id: req.user.id },
         {
           password: passwordHash,
