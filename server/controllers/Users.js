@@ -143,30 +143,35 @@ const userCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user/user_info/:id
   getUserInfor: async (req, res) => {
     try {
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await User.findById(req.params.id).select("-password");
 
       res.json(user);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user/all_user get access_token from hitting user/refresh_token paste the token in headers Authorization
   getUsersAllInfor: async (req, res) => {
     try {
-      const users = await Users.find().select("-password");
+      const users = await User.find().select("-password");
 
       res.json(users);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user/update_user patch req
   updateUser: async (req, res) => {
     try {
-      const { name, avatar } = req.body;
-      await Users.findOneAndUpdate(
+      const { name, avatar,email } = req.body;
+      await User.findOneAndUpdate(
         { _id: req.user.id },
+        //update can be a single item just put one of them in body and send req
         {
+          email,
           name,
           avatar,
         }
@@ -177,25 +182,27 @@ const userCtrl = {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user//update_role/:id
   updateUsersRole: async (req, res) => {
     try {
-      const { role } = req.body;
+      const { isAdmin } = req.body;
 
-      await Users.findOneAndUpdate(
+      await User.findOneAndUpdate(
         { _id: req.params.id },
         {
-          role,
+          isAdmin,
         }
       );
 
       res.json({ msg: "Update Success!" });
     } catch (err) {
-      return res.status(500).json({ msg: err.message });
+      return res.status(401).json({ msg: err.message });
     }
   },
+  //user/delete/:id
   deleteUser: async (req, res) => {
     try {
-      await Users.findByIdAndDelete(req.params.id);
+      await User.findByIdAndDelete(req.params.id);
 
       res.json({ msg: "Deleted Success!" });
     } catch (err) {
