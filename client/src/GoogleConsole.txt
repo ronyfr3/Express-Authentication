@@ -1,0 +1,6 @@
+create credentials and set authorized js origin
+ 1.http://localhost:your frontend port
+ 2.http://localhost:your backend port
+ http://your hosted url
+
+N.B: you don't have to put anything to the authorized redirect url section

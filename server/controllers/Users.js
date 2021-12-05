@@ -1,11 +1,11 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { google } = require("googleapis");
-const fetch = require("node-fetch");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { google } = require('googleapis');
+const fetch = require('node-fetch');
 
 const { OAuth2 } = google.auth;
-const sendMail = require("../utils/sendMail");
-const User = require("../models/Users");
+const sendMail = require('../utils/sendMail');
+const User = require('../models/Users');
 
 const client = new OAuth2(process.env.MAILING_SERVICE_CLIENT_ID);
 const { CLIENT_URL } = process.env;
@@ -18,19 +18,19 @@ const userCtrl = {
       const { name, email, password } = req.body;
 
       if (!name || !email || !password)
-        return res.status(400).json({ msg: "Please fill in all fields." });
+        return res.status(400).json({ msg: 'Please fill in all fields.' });
 
       if (!validateEmail(email))
-        return res.status(400).json({ msg: "Invalid emails." });
+        return res.status(400).json({ msg: 'Invalid emails.' });
 
       const user = await User.findOne({ email });
       if (user)
-        return res.status(400).json({ msg: "This email already exists." });
+        return res.status(400).json({ msg: 'This email already exists.' });
 
       if (password.length < 6)
         return res
           .status(400)
-          .json({ msg: "Password must be at least 6 characters." });
+          .json({ msg: 'Password must be at least 6 characters.' });
 
       const passwordHash = await bcrypt.hash(password, 12);
 
@@ -41,7 +41,7 @@ const userCtrl = {
       });
       // return new user
       res.status(201).json({
-        message: "Registration Successfull",
+        message: 'Registration Successfull',
         newUser,
       });
     } catch (err) {
@@ -55,19 +55,19 @@ const userCtrl = {
       const { email, password } = req.body;
       const user = await User.findOne({ email });
       if (!user)
-        return res.status(400).json({ msg: "This email does not exist." });
+        return res.status(400).json({ msg: 'This email does not exist.' });
       //PASSWORD MATCH CHECK
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch)
-        return res.status(400).json({ msg: "Password is incorrect." });
+        return res.status(400).json({ msg: 'Password is incorrect.' });
       const refresh_token = createRefreshToken({ id: user._id });
-      res.cookie("refreshtoken", refresh_token, {
+      res.cookie('refreshtoken', refresh_token, {
         httpOnly: true,
-        path: "/user/refresh_token",
+        path: '/user/refresh_token',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
       res.status(200).json({
-        message: "Login Successfull",
+        message: 'Login Successfull',
         data: {
           name: user.name,
           email: user.email,
@@ -81,8 +81,8 @@ const userCtrl = {
   //user/logout
   logout: async (req, res) => {
     try {
-      res.clearCookie("refreshtoken", { path: "/user/refresh_token" });
-      return res.json({ message: "You are logged out!" });
+      res.clearCookie('refreshtoken', { path: '/user/refresh_token' });
+      return res.json({ message: 'You are logged out!' });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
@@ -95,31 +95,33 @@ const userCtrl = {
     // }
     try {
       const rf_token = req.cookies.refreshtoken;
-      if (!rf_token) return res.status(400).json({ msg: "Please login now!" });
+      if (!rf_token) return res.status(400).json({ msg: 'Please login now!' });
 
       jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-        if (err) return res.status(400).json({ msg: "Please login now!" });
+        if (err) return res.status(400).json({ msg: 'Please login now!' });
 
         const access_token = createAccessToken({ id: user.id });
-        res.json({ message: "user is already logged in", access_token });
+        res.json({ message: 'user is already logged in', access_token });
       });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
   //user/forgot
-  forgotPassword: async (req, res) => { 
+  forgotPassword: async (req, res) => {
     try {
       const { email } = req.body;
       const user = await User.findOne({ email });
       if (!user)
-        return res.status(400).json({ msg: "This email does not exist." });
+        return res.status(400).json({ msg: 'This email does not exist.' });
 
       const access_token = createAccessToken({ id: user._id });
       const url = `${CLIENT_URL}/user/reset/${access_token}`;
 
-      sendMail(email, url, "Reset your password");
-      res.json({ message: `Re-send the password, please check your email ${access_token}` });
+      sendMail(email, url, 'Reset your password');
+      res.json({
+        message: `Re-send the password, please check your email ${access_token}`,
+      });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
@@ -135,10 +137,10 @@ const userCtrl = {
         { _id: req.user.id },
         {
           password: passwordHash,
-        }
+        },
       );
 
-      res.json({ msg: "Password successfully changed!" });
+      res.json({ msg: 'Password successfully changed!' });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
@@ -146,7 +148,7 @@ const userCtrl = {
   //user/user_info/:id
   getUserInfor: async (req, res) => {
     try {
-      const user = await User.findById(req.params.id).select("-password");
+      const user = await User.findById(req.params.id).select('-password');
 
       res.json(user);
     } catch (err) {
@@ -156,7 +158,7 @@ const userCtrl = {
   //user/all_user get access_token from hitting user/refresh_token paste the token in headers Authorization
   getUsersAllInfor: async (req, res) => {
     try {
-      const users = await User.find().select("-password");
+      const users = await User.find().select('-password');
 
       res.json(users);
     } catch (err) {
@@ -166,7 +168,7 @@ const userCtrl = {
   //user/update_user patch req
   updateUser: async (req, res) => {
     try {
-      const { name, avatar,email } = req.body;
+      const { name, avatar, email } = req.body;
       await User.findOneAndUpdate(
         { _id: req.user.id },
         //update can be a single item just put one of them in body and send req
@@ -174,10 +176,10 @@ const userCtrl = {
           email,
           name,
           avatar,
-        }
+        },
       );
 
-      res.json({ msg: "Update Success!" });
+      res.json({ msg: 'Update Success!' });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
@@ -191,10 +193,10 @@ const userCtrl = {
         { _id: req.params.id },
         {
           isAdmin,
-        }
+        },
       );
 
-      res.json({ msg: "Update Success!" });
+      res.json({ msg: 'Update Success!' });
     } catch (err) {
       return res.status(401).json({ msg: err.message });
     }
@@ -204,71 +206,89 @@ const userCtrl = {
     try {
       await User.findByIdAndDelete(req.params.id);
 
-      res.json({ msg: "Deleted Success!" });
+      res.json({ msg: 'Deleted Success!' });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user/google_login
   googleLogin: async (req, res) => {
     try {
       const { tokenId } = req.body;
-
+      // console.log(tokenId);
       const verify = await client.verifyIdToken({
         idToken: tokenId,
-        audience: process.env.MAILING_SERVICE_CLIENT_ID,
+        audience:
+          '779648521547-gjlsus2l9aud4kosqdtc5gu5icmumqlp.apps.googleusercontent.com', //google client_id
       });
-
       const { email_verified, email, name, picture } = verify.payload;
-
-      const password = email + process.env.GOOGLE_SECRET;
-
-      const passwordHash = await bcrypt.hash(password, 12);
+      console.log(email); //google pop up selected email
+      console.log('email_verified', email_verified); //return true / false
 
       if (!email_verified)
-        return res.status(400).json({ msg: "Email verification failed." });
+        return res.status(400).json({ msg: 'Email verification failed.' });
 
-      const user = await Users.findOne({ email });
+      //hashed password
+      const password = email + process.env.GOOGLE_SECRET;
+      const passwordHash = await bcrypt.hash(password, 12);
 
+      const user = await User.findOne({ email });
       if (user) {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
-          return res.status(400).json({ msg: "Password is incorrect." });
-
+          return res.status(400).json({ msg: 'Password is incorrect.' });
         const refresh_token = createRefreshToken({ id: user._id });
-        res.cookie("refreshtoken", refresh_token, {
+        res.cookie('refreshtoken', refresh_token, {
           httpOnly: true,
-          path: "/user/refresh_token",
+          path: '/user/refresh_token',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
-        res.json({ msg: "Login success!" });
+        res.status(200).json({
+          message: 'Login Successfull',
+          data: {
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            isAdmin: user.isAdmin,
+          },
+        });
       } else {
-        const newUser = new Users({
+        const newUser = new User({
           name,
           email,
           password: passwordHash,
           avatar: picture,
         });
 
-        await newUser.save();
+        const userData = await newUser.save();
 
         const refresh_token = createRefreshToken({ id: newUser._id });
-        res.cookie("refreshtoken", refresh_token, {
+        res.cookie('refreshtoken', refresh_token, {
           httpOnly: true,
-          path: "/user/refresh_token",
+          path: '/user/refresh_token',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
-        res.json({ msg: "Login success!" });
+        res.status(200).json({
+          message: 'Login Success',
+          data: {
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.avatar,
+            isAdmin: userData.isAdmin,
+          },
+        });
       }
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
+  //user/facebook_login
   facebookLogin: async (req, res) => {
     try {
       const { accessToken, userID } = req.body;
-
+      //developers.facebook.com/docs/graph-api/overview/ -->versions curl -i X GET \
       const URL = `https://graph.facebook.com/v2.9/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`;
 
       const data = await fetch(URL)
@@ -283,21 +303,29 @@ const userCtrl = {
 
       const passwordHash = await bcrypt.hash(password, 12);
 
-      const user = await Users.findOne({ email });
+      const user = await User.findOne({ email });
 
       if (user) {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
-          return res.status(400).json({ msg: "Password is incorrect." });
+          return res.status(400).json({ msg: 'Password is incorrect.' });
 
         const refresh_token = createRefreshToken({ id: user._id });
-        res.cookie("refreshtoken", refresh_token, {
+        res.cookie('refreshtoken', refresh_token, {
           httpOnly: true,
-          path: "/user/refresh_token",
+          path: '/user/refresh_token',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
-        res.json({ msg: "Login success!" });
+        res.status(200).json({
+          message: 'Login Successfull',
+          data: {
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            isAdmin: user.isAdmin,
+          },
+        });
       } else {
         const newUser = new Users({
           name,
@@ -306,16 +334,24 @@ const userCtrl = {
           avatar: picture.data.url,
         });
 
-        await newUser.save();
+        const fbUserData = await newUser.save();
 
         const refresh_token = createRefreshToken({ id: newUser._id });
-        res.cookie("refreshtoken", refresh_token, {
+        res.cookie('refreshtoken', refresh_token, {
           httpOnly: true,
-          path: "/user/refresh_token",
+          path: '/user/refresh_token',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
-        res.json({ msg: "Login success!" });
+        res.status(200).json({
+          message: 'Login Success',
+          data: {
+            name: fbUserData.name,
+            email: fbUserData.email,
+            avatar: fbUserData.avatar,
+            isAdmin: fbUserData.isAdmin,
+          },
+        });
       }
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -331,20 +367,20 @@ function validateEmail(email) {
 
 const createActivationToken = (payload) => {
   return jwt.sign(payload, process.env.ACTIVATION_TOKEN_SECRET, {
-    expiresIn: "5m",
+    expiresIn: '5m',
   });
 };
 
 const createAccessToken = (payload) => {
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "30m",
+    expiresIn: '30m',
   });
 };
 
 const createRefreshToken = (payload) => {
   //payload = user._id
   return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "7d",
+    expiresIn: '7d',
   });
 };
 
