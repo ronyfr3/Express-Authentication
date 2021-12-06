@@ -24,6 +24,8 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/user', require('./routes/Users'));
 app.use('/stationary', require('./routes/Stationary'));
+app.use('/enmedium', require('./routes/EnglishMedium'));
+app.use('/storybook', require('./routes/StoryBook'));
 
 let PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`server is running at port ${PORT}`));
