@@ -1,26 +1,25 @@
-const EnglishMedium = require('../models/EnglishMedium')
+const EnglishMedium = require('../models/EnglishMedium');
+const ErrorHandler = require('../utils/errorHandler');
+const AsyncErrorHandler = require('../Middlewares/catchAsyncError'); 
 
 
 const englishMedium ={
-    getAll: async (req, res) => {
-        try {
-          const englishbooks = await EnglishMedium.find();
-          res.json(englishbooks);
-        } catch (err) {
-          return res.status(500).json({ msg: err.message });
-        }
-      },
-      getOne: async (req, res) => {
-        try {
-          const englishbooks = await EnglishMedium.findById(req.params.id);
+    getAll: AsyncErrorHandler(async (req, res,next) => {
+          const books = await EnglishMedium.find();
+
+          res.status(200).json({ success: true, books });
+          return next(new ErrorHandler("Items not found",404));
+      }),
+      getOne: AsyncErrorHandler(async (req, res, next) => {
+          const book = await EnglishMedium.findById(req.params.id);
     
-          res.json(englishbooks);
-        } catch (err) {
-          return res.status(500).json({ msg: err.message });
-        }
-      },
-      create: async (req, res) => {
-        try {
+          res.status(200).json({success: true, book});
+          return next(new ErrorHandler("Item not found",404));
+      }),
+      create: AsyncErrorHandler(async (req, res) => {
+          if(!req.body){
+            return next(new ErrorHandler("Item Creation Failed",404));
+          }
           const {
             title,
             brand,
@@ -33,7 +32,7 @@ const englishMedium ={
             buying_price,
             no_commision
           } = req.body;
-          const englishbooks = new EnglishMedium({
+          const book = new EnglishMedium({
             title,
             brand,
             category,
@@ -46,16 +45,15 @@ const englishMedium ={
             no_commision
           });
     
-          const createdEnglishbooks= await englishbooks.save();
+          const book_details = await book.save();
           res
             .status(201)
-            .json({ createdEnglishbooks, message: 'Item created successfully' });
-        } catch (error) {
-          res.status(400).json({ message: 'Item not created' });
+            .json({ book_details, message: 'Item created successfully' });
+      }),
+      update: AsyncErrorHandler(async (req, res) => {
+        if(!req.body){
+          return next(new ErrorHandler("Item Creation Failed",404));
         }
-      },
-      update: async (req, res) => {
-        try {
           const {
             title,
             brand,
@@ -69,45 +67,46 @@ const englishMedium ={
             no_commision,
             countInStock,
           } = req.body;
-          const englishbooks = await EnglishMedium.findById(req.params.id);
-          if (englishbooks) {
-            englishbooks.title = title;
-            englishbooks.image = image;
-            englishbooks.category = category;
-            englishbooks.description = description;
-            englishbooks.brand = brand;
-            englishbooks.product_type = product_type;
-            englishbooks.mrp = mrp;
-            englishbooks.buying_price = buying_price;
-            englishbooks.no_commision = no_commision;
-            englishbooks.countInStock = countInStock;
+          const book = await EnglishMedium.findById(req.params.id);
+          if (book) {
+            book.title = title;
+            book.image = image;
+            book.category = category;
+            book.description = description;
+            book.brand = brand;
+            book.product_type = product_type;
+            book.mrp = mrp;
+            book.buying_price = buying_price;
+            book.no_commision = no_commision;
+            book.countInStock = countInStock;
     
-            const updatedEnglishbooks = await EnglishMedium.save();
+            const book_details = await EnglishMedium.save();
             res
               .status(200)
-              .json({ updatedEnglishbooks, message: 'Item updated successfully' });
+              .json({ book_details, message: 'Item updated successfully' });
           }
-        } catch (error) {
-          res.status(404).json({ message: 'Item Not Found!' });
+
+
+      }),
+      delete: AsyncErrorHandler(async (req, res) => {
+        if(!req.params.id){
+          return next(new ErrorHandler("Item not found",404));
         }
-      },
-      delete: async (req, res) => {
-        try {
-          const englishbooks = await EnglishMedium.findById(req.params.id);
-          if (englishbooks) {
-            await englishbooks.remove();
-            res.status(200).json({ message: 'item removed' });
+          const book = await EnglishMedium.findById(req.params.id);
+          if (book) {
+            await book.remove();
+            res.status(200).json({ success:true, message: 'Item deleted successfully'});
           }
-        } catch (error) {
+        
           res.status(404).json({ message: 'Item not found!' });
-        }
-      },
-      review: async (req, res) => {
-        try {
+        
+      }),
+      review: AsyncErrorHandler(async (req, res) => {
+
           const { rating, comment } = req.body;
-          const englishbooks = await EnglishMedium.findById(req.params.id);
-          if (englishbooks) {
-            const alreadyReview = englishbooks.reviews.find(
+          const book = await EnglishMedium.findById(req.params.id);
+          if (book) {
+            const alreadyReview = book.reviews.find(
               (r) => r.user.toString() === req.user._id.toString(),
             );
             if (alreadyReview) {
@@ -119,17 +118,15 @@ const englishMedium ={
               name: req.user.name,
               user: req.user._id,
             };
-            englishbooks.reviews.push(review);
-            englishbooks.numReviews = englishbooks.reviews.length;
-            englishbooks.rating =
-              englishbooks.reviews.reduce((acc, item) => item.rating + acc, 0) /
-              englishbooks.reviews.length;
-            await englishbooks.save();
+            book.reviews.push(review);
+            book.numReviews = book.reviews.length;
+            book.rating =
+              book.reviews.reduce((acc, item) => item.rating + acc, 0) /
+              book.reviews.length;
+            await book.save();
             res.status(201).json({ message: 'review added' });
           }
-        } catch (error) {
-          res.status(404).json({ message: 'Product not found!' });
-        }
-      },
+          return next(new ErrorHandler("Item not found",404))
+      }),
 }
 module.exports = englishMedium

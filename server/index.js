@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const errorMiddleware = require('./Middlewares/error')
 const app = express();
 //require db
 const connect = require('./config/db');
@@ -26,6 +27,10 @@ app.use('/user', require('./routes/Users'));
 app.use('/stationary', require('./routes/Stationary'));
 app.use('/enmedium', require('./routes/EnglishMedium'));
 app.use('/storybook', require('./routes/StoryBook'));
+
+
+//error middleware
+app.use(errorMiddleware)
 
 let PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`server is running at port ${PORT}`));
