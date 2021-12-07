@@ -1,16 +1,25 @@
+//handling uncaught exceptions, if something is undefined/uncaught then this will handled
+process.on('uncaughtException',(err) => {
+  console.log(`server is shutting down due to uncaught exception: ${err.message}`);
+})
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const errorMiddleware = require('./Middlewares/error')
+
+//app initialization
 const app = express();
+
 //require db
 const connect = require('./config/db');
 connect();
-
-//cors
+//body-parser
 app.use(express.json());
+//cors
 app.use(cors());
+//cookieParser
 app.use(cookieParser());
 
 //destructure env object
@@ -33,4 +42,12 @@ app.use('/storybook', require('./routes/StoryBook'));
 app.use(errorMiddleware)
 
 let PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`server is running at port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`server is running at port ${PORT}`));
+
+//unhandled promise rejection handling
+process.on('unhandledRejection',(err)=>{
+  console.log('shutting down server due to unhandled promise rejection. Error: ' + err.message);
+  server.close(()=>{
+    process.exit(1);
+  })
+})

@@ -9,13 +9,9 @@ const connect = () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
-    .then(() => {
-      console.log("Successfully connected to database");
+    .then((data) => {
+      console.log(`mongodb connection established with server: ${data.connection.host}`);
     })
-    .catch((error) => {
-      console.log("database connection failed. exiting now...");
-      console.error(error);
-      process.exit(1);
-    });
+    //we are handling promise rejection in index.js so we needn't to put catch block here
 };
 module.exports = connect

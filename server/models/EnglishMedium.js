@@ -40,14 +40,14 @@ mrp:String,
 buying_price:String,
 no_commision:String,
 reviews: [reviewSchema],
-    rating: {
-      type: Number,
-      default: 0,
-    },
-    numReviews: {
-      type: Number,
-      default: 0,
-    },
+rating: {
+  type: Number,
+  default: 0,
+},
+numReviews: {
+  type: Number,
+  default: 0,
+},
     countInStock: Boolean,
 },{
     timestamps:true,

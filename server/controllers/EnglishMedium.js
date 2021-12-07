@@ -6,15 +6,15 @@ const AsyncErrorHandler = require('../Middlewares/catchAsyncError');
 const englishMedium ={
     getAll: AsyncErrorHandler(async (req, res,next) => {
           const books = await EnglishMedium.find();
-
           res.status(200).json({ success: true, books });
-          return next(new ErrorHandler("Items not found",404));
       }),
       getOne: AsyncErrorHandler(async (req, res, next) => {
           const book = await EnglishMedium.findById(req.params.id);
-    
-          res.status(200).json({success: true, book});
-          return next(new ErrorHandler("Item not found",404));
+          if(book){
+            res.status(200).json({success: true, book});
+          }else{
+            return next(new ErrorHandler("Item not found",404));
+          }
       }),
       create: AsyncErrorHandler(async (req, res) => {
           if(!req.body){
@@ -51,9 +51,6 @@ const englishMedium ={
             .json({ book_details, message: 'Item created successfully' });
       }),
       update: AsyncErrorHandler(async (req, res) => {
-        if(!req.body){
-          return next(new ErrorHandler("Item Creation Failed",404));
-        }
           const {
             title,
             brand,
@@ -84,22 +81,18 @@ const englishMedium ={
             res
               .status(200)
               .json({ book_details, message: 'Item updated successfully' });
+          }else{
+            return next(new ErrorHandler("Item not found",404))
           }
-
-
       }),
       delete: AsyncErrorHandler(async (req, res) => {
-        if(!req.params.id){
-          return next(new ErrorHandler("Item not found",404));
-        }
           const book = await EnglishMedium.findById(req.params.id);
           if (book) {
             await book.remove();
             res.status(200).json({ success:true, message: 'Item deleted successfully'});
+          }else{
+            return next(new ErrorHandler("Item not found",404));
           }
-        
-          res.status(404).json({ message: 'Item not found!' });
-        
       }),
       review: AsyncErrorHandler(async (req, res) => {
 
@@ -125,8 +118,9 @@ const englishMedium ={
               book.reviews.length;
             await book.save();
             res.status(201).json({ message: 'review added' });
+          }else{
+            return next(new ErrorHandler("Item not found",404))
           }
-          return next(new ErrorHandler("Item not found",404))
       }),
 }
 module.exports = englishMedium
