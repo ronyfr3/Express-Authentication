@@ -10,6 +10,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const errorMiddleware = require("./Middlewares/error");
+const sendEmail = require("./utils/sendMail")
 
 //app initialization
 const app = express();
@@ -40,6 +41,11 @@ app.use("/enmedium", require("./routes/EnglishMedium"));
 app.use("/storybook", require("./routes/WriterStoryBook"));
 app.use("/childrenstorybook", require("./routes/ChildrenStoryBook"));
 app.use("/alevel", require("./routes/ALevel"));
+//mail
+app.post("/sendemail",(req,res) => {
+  sendEmail()
+  res.status(200).send({message:"send"})
+})
 
 //error middleware
 app.use(errorMiddleware);
