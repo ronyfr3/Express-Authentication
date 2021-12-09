@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const reviewSchema = mongoose.Schema(
   {
@@ -21,25 +21,36 @@ const reviewSchema = mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User',
+      ref: "User",
     },
   },
   {
     timestamps: true,
-  },
+  }
 );
 
-const storyBookSchema = mongoose.Schema(
+const childrenStoryBookSchema = mongoose.Schema(
   {
-    writer_name:String,
     title: String,
     brand: String,
     category: String,
     image: String,
     description: String,
-    main: String,
     sell: String,
     buy: String,
+    shishuShahitto: {
+      title: String,
+      sell: {
+        best: String,
+        medium: String,
+        average: String,
+      },
+      buy: {
+        best: String,
+        medium: String,
+        average: String,
+      },
+    },
     reviews: [reviewSchema],
     rating: {
       type: Number,
@@ -53,7 +64,10 @@ const storyBookSchema = mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
-module.exports = mongoose.model('StoryBook', storyBookSchema);
+module.exports = mongoose.model(
+  "childrenStoryBookSchema",
+  childrenStoryBookSchema
+);

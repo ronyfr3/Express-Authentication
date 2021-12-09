@@ -35,7 +35,8 @@ app.get('/', (req, res) => {
 app.use('/user', require('./routes/Users'));
 app.use('/stationary', require('./routes/Stationary'));
 app.use('/enmedium', require('./routes/EnglishMedium'));
-app.use('/storybook', require('./routes/StoryBook'));
+app.use('/storybook', require('./routes/WriterStoryBook'));
+app.use('/childrenstorybook', require('./routes/ChildrenStoryBook'));
 
 
 //error middleware

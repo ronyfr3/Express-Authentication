@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+
 const reviewSchema = mongoose.Schema(
   {
     name: {
@@ -20,26 +21,25 @@ const reviewSchema = mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User",
+      ref: 'User',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const EnMedium = mongoose.Schema(
+const writerStoryBookSchema = mongoose.Schema(
   {
+    writer_name:String,
     title: String,
-    product_type: String,
-    category: String,
     brand: String,
+    category: String,
     image: String,
     description: String,
-    books: [],
-    mrp: String,
-    buying_price: String,
-    no_commision: String,
+    main: String,
+    sell: String,
+    buy: String,
     reviews: [reviewSchema],
     rating: {
       type: Number,
@@ -53,7 +53,7 @@ const EnMedium = mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model("EnglishMedium", EnMedium);
+module.exports = mongoose.model('writerStoryBookSchema', writerStoryBookSchema);

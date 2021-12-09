@@ -1,35 +1,59 @@
-const Stationary = require('../models/Stationary');
+const Stationary = require("../models/Stationary");
+const ErrorHandler = require("../utils/errorHandler");
+const AsyncErrorHandler = require("../Middlewares/catchAsyncError");
+const APIfeatures = require("../utils/Queries");
 
 const stationary = {
-  getAll: async (req, res) => {
-    try {
-      const stationaries = await Stationary.find();
-      res.json(stationaries);
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
+  getAll: AsyncErrorHandler(async (req, res, next) => {
+    const apiFeature = new APIfeatures(Stationary.find(), req.query)
+      .search()
+      .sorting()
+      .filtering()
+      .paginating(15);
+    const totalCount = await Stationary.countDocuments();
+    const stationaries = await apiFeature.query;
+    if (stationaries.length === 0) {
+      return next(new ErrorHandler("Empty Items list", 400));
+    } else {
+      res
+        .status(200)
+        .json({ totalItems: totalCount, success: true, stationaries });
     }
-  },
-  getOne: async (req, res) => {
-    try {
-      const stationary = await Stationary.findById(req.params.id);
+  }),
+  getOne: AsyncErrorHandler(async (req, res, next) => {
+    const stationary = await Stationary.findById(req.params.id);
 
-      res.json(stationary);
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
+    if (stationary) {
+      res.status(200).json({ success: true, stationary });
+    } else {
+      return next(new ErrorHandler("Item not found", 404));
     }
-  },
-  create: async (req, res) => {
-    try {
+  }),
+  create: AsyncErrorHandler(async (req, res, next) => {
+    if (
+      Object.keys(req.body).length === 0 ||
+      !req.body.title ||
+      !req.body.brand ||
+      !req.body.category ||
+      !req.body.description ||
+      !req.body.product_type ||
+      !req.body.image ||
+      !req.body.bulk_price ||
+      !req.body.sell_single ||
+      !req.body.buy_single
+    ) {
+      return next(new ErrorHandler("please fill in all fields", 404));
+    } else {
       const {
         title,
         brand,
         category,
         description,
         product_type,
+        image,
         bulk_price,
         sell_single,
         buy_single,
-        image,
       } = req.body;
       const stationary = new Stationary({
         title,
@@ -37,22 +61,22 @@ const stationary = {
         category,
         description,
         product_type,
+        image,
         bulk_price,
         sell_single,
         buy_single,
-        image,
       });
 
       const createdStationary = await stationary.save();
       res
         .status(201)
-        .json({ createdStationary, message: 'Item created successfully' });
-    } catch (error) {
-      res.status(400).json({ message: 'Item not created' });
+        .json({ createdStationary, message: "Item created successfully" });
     }
-  },
-  update: async (req, res) => {
-    try {
+  }),
+  update: AsyncErrorHandler(async (req, res, next) => {
+    if (Object.keys(req.body).length === 0) {
+      return next(new ErrorHandler("please fill at least one field", 404));
+    } else {
       const {
         title,
         brand,
@@ -81,33 +105,35 @@ const stationary = {
         const updatedStationary = await stationary.save();
         res
           .status(200)
-          .json({ updatedStationary, message: 'Item updated successfully' });
+          .json({ updatedStationary, message: "Item updated successfully" });
+      } else {
+        return next(new ErrorHandler("Item not found", 404));
       }
-    } catch (error) {
-      res.status(404).json({ message: 'Item Not Found!' });
     }
-  },
-  delete: async (req, res) => {
-    try {
-      const stationary = await Stationary.findById(req.params.id);
-      if (stationary) {
-        await stationary.remove();
-        res.status(200).json({ message: 'item removed' });
-      }
-    } catch (error) {
-      res.status(404).json({ message: 'Item not found!' });
+  }),
+  delete: AsyncErrorHandler(async (req, res, next) => {
+    const stationary = await Stationary.findById(req.params.id);
+    if (stationary) {
+      await stationary.remove();
+      res
+        .status(200)
+        .json({ success: true, message: "Item deleted successfully" });
+    } else {
+      return next(new ErrorHandler("Item not found", 404));
     }
-  },
-  review: async (req, res) => {
-    try {
+  }),
+  review: AsyncErrorHandler(async (req, res, next) => {
+    if (Object.keys(req.body).length === 0) {
+      return next(new ErrorHandler("please fill at least one field", 404));
+    } else {
       const { rating, comment } = req.body;
       const stationary = await Stationary.findById(req.params.id);
       if (stationary) {
         const alreadyReview = stationary.reviews.find(
-          (r) => r.user.toString() === req.user._id.toString(),
+          (r) => r.user.toString() === req.user._id.toString()
         );
         if (alreadyReview) {
-          res.status(400).json({ msg: 'Item already reviewed' });
+          res.status(400).json({ msg: "Item already reviewed" });
         }
         const review = {
           rating: Number(rating),
@@ -121,11 +147,11 @@ const stationary = {
           stationary.reviews.reduce((acc, item) => item.rating + acc, 0) /
           stationary.reviews.length;
         await stationary.save();
-        res.status(201).json({ message: 'review added' });
+        res.status(201).json({ message: "review added" });
+      } else {
+        return next(new ErrorHandler("Item not found", 404));
       }
-    } catch (error) {
-      res.status(404).json({ message: 'Product not found!' });
     }
-  },
+  }),
 };
 module.exports = stationary;

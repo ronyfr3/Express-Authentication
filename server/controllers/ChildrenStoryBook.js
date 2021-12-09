@@ -1,25 +1,25 @@
-const StoryBook = require("../models/WriterStoryBook");
+const ChildrenStoryBook = require("../models/ChildrenStoryBook");
 const ErrorHandler = require("../utils/errorHandler");
 const AsyncErrorHandler = require("../Middlewares/catchAsyncError");
 const APIfeatures = require("../utils/Queries");
 
-const storyBook = {
+const childrenStoryBook = {
   getAll: AsyncErrorHandler(async (req, res, next) => {
-    const apiFeature = new APIfeatures(StoryBook.find(), req.query)
+    const apiFeature = new APIfeatures(ChildrenStoryBook.find(), req.query)
       .search()
       .sorting()
       .filtering()
       .paginating(15);
-    const totalCount = await StoryBook.countDocuments();
-    const book = await apiFeature.query;
-    if (book.length === 0) {
+    const totalCount = await ChildrenStoryBook.countDocuments();
+    const books = await apiFeature.query;
+    if (books.length === 0) {
       return next(new ErrorHandler("Empty Items list", 400));
     } else {
-      res.status(200).json({ totalItems: totalCount, success: true, book });
+      res.status(200).json({ totalItems: totalCount, success: true, books });
     }
   }),
   getOne: AsyncErrorHandler(async (req, res, next) => {
-    const book = await Stationary.findById(req.params.id);
+    const book = await ChildrenStoryBook.findById(req.params.id);
     if (book) {
       res.status(200).json({ success: true, book });
     } else {
@@ -34,40 +34,37 @@ const storyBook = {
       !req.body.category ||
       !req.body.image ||
       !req.body.description ||
-      !req.body.writer_name ||
-      !req.body.main ||
       !req.body.sell ||
-      !req.body.buy
+      !req.body.buy ||
+      !req.body.shishuShahitto
     ) {
       return next(new ErrorHandler("please fill in all fields", 404));
     } else {
       const {
-        writer_name,
         title,
         brand,
         category,
         image,
         description,
-        main,
         sell,
         buy,
+        shishuShahitto,
       } = req.body;
-      const book = new Stationary({
-        writer_name,
+      const book = new ChildrenStoryBook({
         title,
         brand,
         category,
         image,
         description,
-        main,
         sell,
         buy,
+        shishuShahitto,
       });
 
-      const createdStoryBook = await book.save();
+      const book_details = await book.save();
       res
         .status(201)
-        .json({ createdStoryBook, message: "Item created successfully" });
+        .json({ book_details, message: "Item created successfully" });
     }
   }),
   update: AsyncErrorHandler(async (req, res, next) => {
@@ -75,43 +72,39 @@ const storyBook = {
       return next(new ErrorHandler("please fill at least one field", 404));
     } else {
       const {
-        writer_name,
         title,
         brand,
         category,
         image,
         description,
-        main,
         sell,
         buy,
-        countInStock,
+        shishuShahitto,
       } = req.body;
-      const storybook = await StoryBook.findById(req.params.id);
-      if (stationary) {
-        storybook.writer_name = writer_name;
-        storybook.title = title;
-        storybook.image = image;
-        storybook.category = category;
-        storybook.description = description;
-        storybook.brand = brand;
-        storybook.main = main;
-        storybook.sell = sell;
-        storybook.buy = buy;
-        storybook.countInStock = countInStock;
+      const book = await ChildrenStoryBook.findById(req.params.id);
+      if (book) {
+        book.title = title;
+        book.image = image;
+        book.category = category;
+        book.description = description;
+        book.brand = brand;
+        book.brand = sell;
+        book.brand = buy;
+        book.brand = shishuShahitto;
 
-        const updatedStoryBook = await StoryBook.save();
+        const book_details = await ChildrenStoryBook.save();
         res
           .status(200)
-          .json({ updatedStoryBook, message: "Item updated successfully" });
+          .json({ book_details, message: "Item updated successfully" });
       } else {
         return next(new ErrorHandler("Item not found", 404));
       }
     }
   }),
   delete: AsyncErrorHandler(async (req, res, next) => {
-    const storybook = await StoryBook.findById(req.params.id);
-    if (storybook) {
-      await storybook.remove();
+    const book = await ChildrenStoryBook.findById(req.params.id);
+    if (book) {
+      await book.remove();
       res
         .status(200)
         .json({ success: true, message: "Item deleted successfully" });
@@ -124,9 +117,9 @@ const storyBook = {
       return next(new ErrorHandler("please fill at least one field", 404));
     } else {
       const { rating, comment } = req.body;
-      const storybook = await StoryBook.findById(req.params.id);
-      if (storybook) {
-        const alreadyReview = storybook.reviews.find(
+      const book = await ChildrenStoryBook.findById(req.params.id);
+      if (book) {
+        const alreadyReview = book.reviews.find(
           (r) => r.user.toString() === req.user._id.toString()
         );
         if (alreadyReview) {
@@ -138,12 +131,12 @@ const storyBook = {
           name: req.user.name,
           user: req.user._id,
         };
-        storybook.reviews.push(review);
-        storybook.numReviews = storybook.reviews.length;
-        storybook.rating =
-          storybook.reviews.reduce((acc, item) => item.rating + acc, 0) /
-          storybook.reviews.length;
-        await storybook.save();
+        book.reviews.push(review);
+        book.numReviews = book.reviews.length;
+        book.rating =
+          book.reviews.reduce((acc, item) => item.rating + acc, 0) /
+          book.reviews.length;
+        await book.save();
         res.status(201).json({ message: "review added" });
       } else {
         return next(new ErrorHandler("Item not found", 404));
@@ -151,4 +144,4 @@ const storyBook = {
     }
   }),
 };
-module.exports = storyBook;
+module.exports = childrenStoryBook;
