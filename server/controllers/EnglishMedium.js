@@ -4,6 +4,90 @@ const AsyncErrorHandler = require("../Middlewares/catchAsyncError");
 const APIfeatures = require("../utils/Queries");
 
 const englishMedium = {
+  getByLastYear: AsyncErrorHandler(async (req, res, next) => {
+    const totalCount = await EnglishMedium.countDocuments();
+    const lastYearData = await EnglishMedium.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(new Date().getTime() - 365 * 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+    ]);
+    if (lastYearData) {
+      res
+        .status(200)
+        .json({
+          totalDocument: totalCount,
+          returnDocuments: lastYearData.length,
+          success: true,
+          lastYearData,
+        });
+    } else {
+      return next(new ErrorHandler("Item not found", 404));
+    }
+  }),
+  getByLast6Month: AsyncErrorHandler(async (req, res, next) => {
+    const now = new Date();
+    const temp = new Date(now).setMonth(now.getMonth() - 6);
+    const priorSix = new Date(temp);
+    const totalCount = await EnglishMedium.countDocuments();
+    const last6MonthData = await EnglishMedium.find({
+      createdAt: { $gte: priorSix, $lt: new Date() },
+    });
+    if (last6MonthData) {
+      res
+        .status(200)
+        .json({
+          totalDocument: totalCount,
+          returnDocuments: last6MonthData.length,
+          success: true,
+          last6MonthData,
+        });
+    } else {
+      return next(new ErrorHandler("Item not found", 404));
+    }
+  }),
+  getByLastMonth: AsyncErrorHandler(async (req, res, next) => {
+    const totalCount = await EnglishMedium.countDocuments();
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1); //1 month ago
+    const lastMonthData = await EnglishMedium.find({
+      createdAt: { $gte: d.toISOString() }, 
+    });
+    if (lastMonthData) {
+      res
+        .status(200)
+        .json({
+          totalDocument: totalCount,
+          returnDocuments: lastMonthData.length,
+          success: true,
+          lastMonthData,
+        });
+    } else {
+      return next(new ErrorHandler("Item not found", 404));
+    }
+  }),
+  getByLastWeek: AsyncErrorHandler(async (req, res, next) => {
+    const totalCount = await EnglishMedium.countDocuments();
+    const lastWeekData = await EnglishMedium.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+    ]);
+    if (lastWeekData) {
+      res
+        .status(200)
+        .json({ totalDocument: totalCount, success: true, lastWeekData });
+    } else {
+      return next(new ErrorHandler("Item not found", 404));
+    }
+  }),
   getAll: AsyncErrorHandler(async (req, res, next) => {
     const apiFeature = new APIfeatures(EnglishMedium.find(), req.query)
       .search()
